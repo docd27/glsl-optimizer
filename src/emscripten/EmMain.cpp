@@ -6,7 +6,9 @@
 
 static glslopt_ctx* gContext = 0;
 
-// #include <emscripten/val.h>
+#ifdef USE_EMBINDS
+	#include <emscripten/val.h>
+#endif
 
 #define str(str) std::string(str)
 #define concat(a, b) str(a) + str(b)
@@ -61,14 +63,14 @@ extern "C" {
 		{
 			failed_log = glslopt_get_log(shader);
 			// printf( "Failed to compile:\n\n%s\n", failed_log);
-			#ifdef EMSCRIPTEN_SYMBOL
+			#ifdef USE_EMBINDS
 				emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ").append(str(failed_log)));
 			#endif
 		} else {
 			optimizedShader = glslopt_get_output(shader);
 			// printf("Out: %s\n", optimizedShader);
 
-			#ifdef EMSCRIPTEN_SYMBOL
+			#ifdef USE_EMBINDS
 				emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
 			#endif
 		}

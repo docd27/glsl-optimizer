@@ -2,8 +2,8 @@ var DEBUG = false; // production - false.
 
 var EMCC = '/usr/lib/emsdk_portable/emscripten/1.29.0/emcc';
 
-var DEBUG_FLAGS = '-g'; //  -s DEMANGLE_SUPPORT=1 
-var OPTIMIZE_FLAGS = ' -O1'; // -O2 closure optimizations seems to be breaking for now
+var DEBUG_FLAGS = '-g';
+var OPTIMIZE_FLAGS = ' -O0'; // -O2 closure optimizations seems to be breaking for now
 
 var includes = [
 	 
@@ -126,6 +126,9 @@ var includes = [
 var fs = require('fs');
 
 var FLAGS = DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS;
+// FLAGS += ' -s ALLOW_MEMORY_GROWTH=1';
+FLAGS += ' -s TOTAL_MEMORY=33554432 '; // 67108864 - 64MB
+//  -s DEMANGLE_SUPPORT=1 
 
 var compile_glsl_opt = EMCC + ' -Isrc -Isrc/mesa -Iinclude '
 	+ includes.join(' ') 
@@ -133,7 +136,7 @@ var compile_glsl_opt = EMCC + ' -Isrc -Isrc/mesa -Iinclude '
 	+ FLAGS;
 
 var package_glsl_opt = EMCC + ' glslopt.bc -Isrc/glsl src/emscripten/EmMain.cpp '
-	+ ' -o glsl-optimizer.js --bind -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']" '
+	+ ' -o glsl-optimizer.js -DUSE_EMBINDS=1 --bind -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']" '
 	+ FLAGS;
 
 var compile_all = EMCC + ' -Isrc -Isrc/mesa -Iinclude -Isrc/glsl '
@@ -166,9 +169,9 @@ function nextJob() {
 }
 
 var jobs = [
-	// compile_glsl_opt,
-	// package_glsl_opt
-	compile_all
+	compile_glsl_opt,
+	package_glsl_opt
+	// compile_all
 ];
 
 nextJob();

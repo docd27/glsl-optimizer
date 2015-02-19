@@ -106,11 +106,11 @@ void main() {
         var results = optimize_glsl( source.value, +target.value, shaderType.value === "vs");
 
         console.log('results', results)
-        if (results.indexOf('Error:') >  -1) {
-          GLSLOptimizer.onError(results);
-        } else {
-          GLSLOptimizer.onSuccess(results);
-        }
+        // if (results.indexOf('Error:') >  -1) {
+        //   GLSLOptimizer.onError(results);
+        // } else {
+        //   GLSLOptimizer.onSuccess(results);
+        // }
       }
 
       var Module = {
