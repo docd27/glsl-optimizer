@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>GLSL Optimizer Emscripten</title>
+    <style>
+
+      body {
+        font-family: sans-serif;
+        margin: 0;
+        padding: 10px;
+      }
+
+      textarea {
+        width: 600px;
+        height: 400px;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 10px;
+      }
+
+    </style>
+  </head>
+  <body>
+    <h1>GLSL Optimizer</h1>
+    <p>
+      <div id="statusLabel"></div>
+      <div id="errorLabel"></div>
+    </p>
+    <p>
+      <select id="shaderType">
+        <option value="fs">Fragment shader</option>
+        <option value="vs">Vertex shader</option>
+      </select>
+
+      <select id="target">
+        <option value="1">OpenGL</option>
+        <option value="2" selected>OpenGL ES 2.0</option>
+        <option value="3">OpenGL ES 3.0</option>
+      </select>
+
+      <button onclick="optimize();">Optimize!</button>
+    </p>
+    <p>
+    <textarea id="source">  
+#define SPREAD 8.00
+#define MAX_DIR_LIGHTS 0
+#define MAX_POINT_LIGHTS 0
+#define MAX_SPOT_LIGHTS 0
+#define MAX_HEMI_LIGHTS 0
+#define MAX_SHADOWS 0
+#define GAMMA_FACTOR 2
+
+uniform mat4 viewMatrix;
+uniform vec3 cameraPosition;
+
+uniform vec2 resolution;
+uniform float time;
+uniform sampler2D texture;
+
+void main() {
+
+  vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+  float v = texture2D( texture, uv ).x;
+
+  if (v == 1000.) discard;
+  v = sqrt(v);
+  
+  gl_FragColor = vec4( vec3( 1. - v / SPREAD ), 1.0 );;
+
+}
+
+    </textarea>
+    </p>
+    <script type='text/javascript'>
+
+    var statusLabel = document.getElementById('statusLabel');
+
+      var GLSLOptimizer = {
+        onError: function(reason) {
+          // console.error(e);
+          statusLabel.textContent = reason;
+        },
+        onSuccess: function(code) {
+          errorLabel.textContent = statusLabel.textContent = '';
+          source.value = code;
+        },
+      }
+
+      var optimize_glsl = function() {
+        alert('not loaded yet!');
+      }
+
+      function postRun() {
+        optimize_glsl = Module.cwrap('optimize_glsl', 'number', ['string','string']);
+      }
+
+      function optimize() {
+        optimize_glsl( source.value, shaderType.value);
+      }
+
+      var Module = {
+        preRun: [],
+        postRun: [ postRun ],
+        print: function(text) {
+            console.log('::print::', text);
+            errorLabel.textContent = text;
+        },
+        printErr: function(text) {
+          text = Array.prototype.slice.call(arguments).join(' ');
+          if (0) { // XXX disabled for safety typeof dump == 'function') {
+            dump(text + '\n'); // fast, straight to the real console
+          } else {
+            console.error(text);
+          }
+        },
+        setStatus: function(text) {
+          // console.log('::status::', text)
+          statusLabel.textContent = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          // console.error('monitorRunDependencies', left);
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+
+      Module.setStatus('Downloading...');
+
+      window.onerror = function(event) {
+        Module.setStatus('Exception thrown, see JavaScript console');
+        Module.setStatus = function(text) {
+          if (text) Module.printErr('[post-exception status] ' + text);
+        };
+      };
+    </script>
+    <script async type="text/javascript" src="glsl-optimizer.js"></script>
+
+   <style>#forkongithub a{background:#000;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#forkongithub a:hover{background:#c11;color:#fff;}#forkongithub a::before,#forkongithub a::after{content:"";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#forkongithub a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#forkongithub{position:absolute;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#forkongithub a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}</style><span id="forkongithub"><a href="https://github.com/zz85/glsl-optimizer/">Fork me on GitHub</a></span>
+  </body>
+</html>

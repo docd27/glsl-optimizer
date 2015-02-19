@@ -22,14 +22,14 @@ static bool compileShader2(const char* originalShader, bool vertexShader)
 	{
 		const char* failed_log = glslopt_get_log(shader);
 		// printf( "Failed to compile:\n\n%s\n", failed_log);
-		emscripten::val::global("HLSLParser").call<void>("onError", str("Failed to compiled: ") + str(failed_log));
+		emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ") + str(failed_log));
 		return false;
 	}
 
 	const char* optimizedShader = glslopt_get_output(shader);
 	// printf("Out: %s\n", optimizedShader);
 
-	emscripten::val::global("HLSLParser").call<void>("onSuccess", str(optimizedShader));
+	emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
 
 	return true;
 }
