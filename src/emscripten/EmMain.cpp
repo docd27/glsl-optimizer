@@ -6,7 +6,7 @@
 
 static glslopt_ctx* gContext = 0;
 
-#include <emscripten/val.h>
+// #include <emscripten/val.h>
 
 #define str(str) std::string(str)
 
@@ -22,21 +22,25 @@ static bool compileShader2(const char* originalShader, bool vertexShader)
 	{
 		const char* failed_log = glslopt_get_log(shader);
 		// printf( "Failed to compile:\n\n%s\n", failed_log);
-		emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ") + str(failed_log));
+		#ifdef EMSCRIPTEN_SYMBOL
+			emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ") + str(failed_log));
+		#endif
 		return false;
 	}
 
 	const char* optimizedShader = glslopt_get_output(shader);
 	// printf("Out: %s\n", optimizedShader);
 
-	emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
+	#ifdef EMSCRIPTEN_SYMBOL
+		emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
+	#endif
 
 	return true;
 }
 
 extern "C" {
 
-    int optimize_glsl(char* source, char* type)
+    const char* optimize_glsl(char* source, char* type)
     {
 
 		bool vertexShader = false;
@@ -51,23 +55,27 @@ extern "C" {
 		//kGlslTargetOpenGLES20  kGlslTargetOpenGLES30 kGlslTargetOpenGL
 
 		if( !source )
-			return printf("Must give a source");
+			return "Error: Must give a source";
 
 		gContext = glslopt_initialize(languageTarget);
 
 		if( !gContext )
 		{
-			printf("Failed to initialize glslopt!\n");
-			return 1;
+			printf("Error: Failed to initialize glslopt!\n");
+			return "Error: Failed to initialize glslopt";
 		}
 
-		int result = 0;
+		int failed = 0;
 		if( !compileShader2(source, vertexShader) )
-			result = 1;
+			failed = 1;
 
 		glslopt_cleanup(gContext);
 
-		return result;
+		if (failed) {
+			return "Failed";
+		} else {
+			return "ok";
+		}
 	}
 
 }

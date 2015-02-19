@@ -94,11 +94,12 @@ void main() {
       }
 
       function postRun() {
-        optimize_glsl = Module.cwrap('optimize_glsl', 'number', ['string','string']);
+        optimize_glsl = Module.cwrap('optimize_glsl', 'string', ['string','string']);
       }
 
       function optimize() {
-        optimize_glsl( source.value, shaderType.value);
+        var ret = optimize_glsl( source.value, shaderType.value);
+        console.log('results', ret)
       }
 
       var Module = {

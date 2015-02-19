@@ -1,4 +1,4 @@
-var DEBUG = true; // production - false.
+var DEBUG = false; // production - false.
 
 var EMCC = '/usr/lib/emsdk_portable/emscripten/1.29.0/emcc';
 
@@ -134,6 +134,11 @@ var package_glsl_opt = EMCC + ' glslopt.bc -Isrc/glsl src/emscripten/EmMain.cpp 
 	+ ' -o glsl-optimizer.js --bind -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']" '
 	+ ( DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS );
 
+var compile_all = EMCC + ' -Isrc -Isrc/mesa -Iinclude -Isrc/glsl '
+	+ includes.join(' ') 
+	+ ' src/emscripten/EmMain.cpp  -DHAVE___BUILTIN_FFS=0 -o glsl-optimizer.js -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']"  '
+	+ ( DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS );
+
 var
 	exec = require('child_process').exec,
 	child;
@@ -159,8 +164,9 @@ function nextJob() {
 }
 
 var jobs = [
-	compile_glsl_opt,
-	package_glsl_opt
+	// compile_glsl_opt,
+	// package_glsl_opt
+	compile_all
 ];
 
 nextJob();
