@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-#include <string.h>
+#include <string>
 #include <stdlib.h>
 #include "glsl_optimizer.h"
 
@@ -9,50 +9,35 @@ static glslopt_ctx* gContext = 0;
 // #include <emscripten/val.h>
 
 #define str(str) std::string(str)
-
-static bool compileShader2(const char* originalShader, bool vertexShader)
-{
-	if( !originalShader )
-		return false;
-
-	const glslopt_shader_type type = vertexShader ? kGlslOptShaderVertex : kGlslOptShaderFragment;
-
-	glslopt_shader* shader = glslopt_optimize(gContext, type, originalShader, 0);
-	if( !glslopt_get_status(shader) )
-	{
-		const char* failed_log = glslopt_get_log(shader);
-		// printf( "Failed to compile:\n\n%s\n", failed_log);
-		#ifdef EMSCRIPTEN_SYMBOL
-			emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ") + str(failed_log));
-		#endif
-		return false;
-	}
-
-	const char* optimizedShader = glslopt_get_output(shader);
-	// printf("Out: %s\n", optimizedShader);
-
-	#ifdef EMSCRIPTEN_SYMBOL
-		emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
-	#endif
-
-	return true;
-}
+#define concat(a, b) str(a) + str(b)
 
 extern "C" {
 
-    const char* optimize_glsl(char* source, char* type)
+    const char* optimize_glsl(char* source, int shaderType, bool vertexShader)
     {
 
-		bool vertexShader = false;
+		// bool vertexShader = false;
 		glslopt_target languageTarget = kGlslTargetOpenGL;
 
-
 		// fragment shader
-		vertexShader = false;
+		// vertexShader = false;
 
 		// ES 2
 		languageTarget = kGlslTargetOpenGLES20;
-		//kGlslTargetOpenGLES20  kGlslTargetOpenGLES30 kGlslTargetOpenGL
+
+		// printf("%d\n", shaderType);
+
+		switch(shaderType) {
+			case 1:
+				languageTarget = kGlslTargetOpenGL;
+				break;
+			case 2:
+				languageTarget = kGlslTargetOpenGLES20;
+				break;
+			case 3:
+				languageTarget = kGlslTargetOpenGLES30;
+				break;
+		}
 
 		if( !source )
 			return "Error: Must give a source";
@@ -62,20 +47,39 @@ extern "C" {
 		if( !gContext )
 		{
 			printf("Error: Failed to initialize glslopt!\n");
-			return "Error: Failed to initialize glslopt";
+			return "Error:\nFailed to initialize glslopt";
 		}
 
-		int failed = 0;
-		if( !compileShader2(source, vertexShader) )
-			failed = 1;
+		const char* failed_log = 0;
+		const glslopt_shader_type type = vertexShader ? kGlslOptShaderVertex : kGlslOptShaderFragment;
+
+		glslopt_shader* shader = glslopt_optimize(gContext, type, source, 0);
+
+		const char* optimizedShader;
+
+		if( !glslopt_get_status(shader) )
+		{
+			failed_log = glslopt_get_log(shader);
+			// printf( "Failed to compile:\n\n%s\n", failed_log);
+			#ifdef EMSCRIPTEN_SYMBOL
+				emscripten::val::global("GLSLOptimizer").call<void>("onError", str("Failed to compiled: ").append(str(failed_log)));
+			#endif
+		} else {
+			optimizedShader = glslopt_get_output(shader);
+			// printf("Out: %s\n", optimizedShader);
+
+			#ifdef EMSCRIPTEN_SYMBOL
+				emscripten::val::global("GLSLOptimizer").call<void>("onSuccess", str(optimizedShader));
+			#endif
+		}
 
 		glslopt_cleanup(gContext);
 
-		if (failed) {
-			return "Failed";
-		} else {
-			return "ok";
+		if (failed_log) {
+			return str("Error:\n").append(str(failed_log)).data();
 		}
+
+		return optimizedShader;
 	}
 
 }
