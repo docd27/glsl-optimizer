@@ -1,3 +1,22 @@
+
+# Emscripten port of GLSL optimizer
+
+This branch for making emscripten compile GLSL optimizer. Check out the [demo](https://zz85.github.io/glsl-optimizer) here.
+
+The glsl-optimizer.js file can be built with buildem script, and can be run with index.html.
+
+```
+node buildem.js
+```
+
+For suggestions or bugs, feel free to add an issue on github or ping on [twitter](https://twitter.com/blurspline).
+
+If you like this, you may also find my [HLSLParser emscripten port](https://github.com/zz85/hlslparser) interesting.
+
+## Known Issues
+- Unable to compile with optimizations using embindings or > -O1 without embind.
+
+
 GLSL optimizer
 ==============
 
