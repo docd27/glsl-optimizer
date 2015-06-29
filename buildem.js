@@ -1,20 +1,34 @@
-var DEBUG = false; // production - false.
+// simple script for building
 
-var EMCC = '/usr/lib/emsdk_portable/emscripten/1.29.0/emcc';
+var EMCC = '/usr/lib/emsdk_portable/emscripten/1.30.0/emcc';
 
+var DEBUG = false;
 var DEBUG_FLAGS = '-g';
-var OPTIMIZE_FLAGS = ' -O0'; // -O2 closure optimizations seems to be breaking for now
+var OPTIMIZE_FLAGS = ' -O1'; // -O2 closure optimizations seems to be breaking
+
+var fs = require('fs');
+
+var FLAGS = DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS;
+
+var switches = {
+	TOTAL_MEMORY: 33554432, // 67108864 - 64MB
+	EMTERPRETIFY: 1,
+	// ALLOW_MEMORY_GROWTH: 1,
+	// DEMANGLE_SUPPORT: 1
+};
+
+FLAGS += ' ' + Object.keys(switches).map(function(s) {
+	return '-s ' + s + '=' + switches[s];
+}).join(' ');
+
 
 var includes = [
-	 
-	 //  libmesa
-	
+	//  libmesa
 	'src/mesa/program/prog_hash_table.c',
 	'src/mesa/program/symbol_table.c',
 	'src/mesa/main/imports.c',
 
 	// libglcpp
-
 	'src/glsl/glcpp/glcpp-lex.c',
 	'src/glsl/glcpp/glcpp-parse.c',
 	'src/glsl/glcpp/pp.c',
@@ -22,7 +36,6 @@ var includes = [
 	'src/util/ralloc.c',
 
 	// libglslopt
-
 	'src/glsl/ast_array_index.cpp',
 	'src/glsl/ast_expr.cpp',
 	'src/glsl/ast_function.cpp',
@@ -120,18 +133,10 @@ var includes = [
 	'src/glsl/s_expression.cpp',
 	'src/glsl/strtod.c',
 	'src/glsl/standalone_scaffolding.cpp',
-
 ];
 
-var fs = require('fs');
-
-var FLAGS = DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS;
-// FLAGS += ' -s ALLOW_MEMORY_GROWTH=1';
-FLAGS += ' -s TOTAL_MEMORY=33554432 '; // 67108864 - 64MB
-//  -s DEMANGLE_SUPPORT=1 
-
 var compile_glsl_opt = EMCC + ' -Isrc -Isrc/mesa -Iinclude '
-	+ includes.join(' ') 
+	+ includes.join(' ')
 	+ ' -DHAVE___BUILTIN_FFS=0 -o glslopt.bc '
 	+ FLAGS;
 
@@ -140,13 +145,17 @@ var package_glsl_opt = EMCC + ' glslopt.bc -Isrc/glsl src/emscripten/EmMain.cpp 
 	+ FLAGS;
 
 var compile_all = EMCC + ' -Isrc -Isrc/mesa -Iinclude -Isrc/glsl '
-	+ includes.join(' ') 
-	+ ' src/emscripten/EmMain.cpp  -DHAVE___BUILTIN_FFS=0 -o glsl-optimizer.js -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']"  '
+	+ includes.join(' ')
+	+ ' src/emscripten/EmMain.cpp -DHAVE___BUILTIN_FFS=0 -o glsl-optimizer.js -s EXPORTED_FUNCTIONS="[\'_optimize_glsl\']"  '
 	+ FLAGS;
 
-var
-	exec = require('child_process').exec,
-	child;
+var exec = require('child_process').exec;
+
+var jobs = [
+	// compile_glsl_opt,
+	// package_glsl_opt
+	compile_all
+];
 
 function onExec(error, stdout, stderr) {
 	if (stdout) console.log('stdout: ' + stdout);
@@ -168,12 +177,4 @@ function nextJob() {
 	exec(cmd, onExec);
 }
 
-var jobs = [
-	compile_glsl_opt,
-	package_glsl_opt
-	// compile_all
-];
-
 nextJob();
-
-
