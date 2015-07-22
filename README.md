@@ -13,9 +13,9 @@ For suggestions or bugs, feel free to add an issue on github or ping on [twitter
 
 If you like this, you may also find my [HLSLParser emscripten port](https://github.com/zz85/hlslparser) interesting.
 
-## Known Issues
-- Unable to compile with optimizations using embindings or > -O1 without embind.
-
+## Updates
+- Finally able to use emscripten -O3 optimizations merging @tschw [bug fixes to glsl-optimizer](https://github.com/zz85/glsl-optimizer/issues/1).
+- Disabled EMTERPRETIFY and EMBIND for now. Code is produced through function's return
 
 GLSL optimizer
 ==============
@@ -59,7 +59,7 @@ For Linux you can use cmake. Just type "cmake . && make" in the root directory.
 This will build the optimizer library and some executable binaries.
 
 Interface for the library is `src/glsl/glsl_optimizer.h`. General usage is:
- 
+
 	ctx = glslopt_initialize(targetVersion);
 	for (lots of shaders) {
 		shader = glslopt_optimize (ctx, shaderType, shaderSource, options);
@@ -91,7 +91,7 @@ feature, it would be cool to add tests to cover it as well!
 Notes
 -----
 
-* GLSL versions 1.10 and 1.20 are supported. 1.10 is the default, use #version 120 to specify 
+* GLSL versions 1.10 and 1.20 are supported. 1.10 is the default, use #version 120 to specify
 1.20. Higher GLSL versions might work, but aren't tested now.
 * GLSL ES versions 1.00 and 3.00 are supported.
 
@@ -106,7 +106,7 @@ Pulling Mesa upstream:
     sh removeDeletedByUs.sh
     # inspect files, git rm unneeded ones, fix conflicts etc.
     # git commit
-    
+
 Rebuilding flex/bison parsers:
 
 * When .y/.l files are changed, the parsers are *not* rebuilt automatically,

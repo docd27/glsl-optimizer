@@ -1,10 +1,10 @@
 // simple script for building
 
-var EMCC = '/usr/lib/emsdk_portable/emscripten/1.30.0/emcc';
+var EMCC = '/usr/lib/emsdk_portable/emscripten/master/emcc';
 
 var DEBUG = false;
 var DEBUG_FLAGS = '-g';
-var OPTIMIZE_FLAGS = ' -O1'; // -O2 closure optimizations seems to be breaking
+var OPTIMIZE_FLAGS = ' -O3';
 
 var fs = require('fs');
 
@@ -12,7 +12,7 @@ var FLAGS = DEBUG ? DEBUG_FLAGS : OPTIMIZE_FLAGS;
 
 var switches = {
 	TOTAL_MEMORY: 33554432, // 67108864 - 64MB
-	EMTERPRETIFY: 1,
+	// EMTERPRETIFY: 1,
 	// ALLOW_MEMORY_GROWTH: 1,
 	// DEMANGLE_SUPPORT: 1
 };
