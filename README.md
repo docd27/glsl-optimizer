@@ -20,6 +20,10 @@ If you like this, you may also find my [HLSLParser emscripten port](https://gith
 GLSL optimizer
 ==============
 
+> :warning: As of mid-2016, the project is unlikely to have any significant developments. At Unity we are moving to a different
+shader compilation pipeline, with glsl-optimizer is not used. So from my side there won't be significant work done on it. :warning:
+
+
 A C++ library that takes GLSL shaders, does some GPU-independent optimizations on them
 and outputs GLSL or Metal source back. Optimizations are function inlining, dead code removal, copy propagation,
 constant folding, constant propagation, arithmetic optimizations and so on.

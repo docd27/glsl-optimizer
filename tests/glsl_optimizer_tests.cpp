@@ -48,6 +48,7 @@ static PFNGLGETSHADERIVPROC glGetShaderiv;
 #include <OpenGL/gl.h>
 #include <OpenGL/CGLTypes.h>
 #include <dirent.h>
+#include <stdlib.h>
 static CGLContextObj s_GLContext;
 static CGLContextObj s_GLContext3;
 static bool s_GL3Active = false;
@@ -312,12 +313,13 @@ static bool CheckGLSL (bool vertex, bool gles, const std::string& testName, cons
 	return res;
 }
 
+#ifdef __APPLE__
 
 static bool CheckMetal (bool vertex, bool gles, const std::string& testName, const char* prefix, const std::string& source)
 {
-#if !GOT_GFX
+#if !GOT_GFX || !defined(__APPLE__)
 	return true; // just assume it's ok
-#endif
+#else
 	
 	FILE* f = fopen ("metalTemp.metal", "wb");
 	fwrite (source.c_str(), source.size(), 1, f);
@@ -330,8 +332,10 @@ static bool CheckMetal (bool vertex, bool gles, const std::string& testName, con
 		return false;
 	}
 	return true;
+#endif
 }
 
+#endif
 
 static bool ReadStringFromFile (const char* pathName, std::string& output)
 {
@@ -457,6 +461,8 @@ static const char* kGlslTypeNames[kGlslTypeCount] = {
 	"2d",
 	"3d",
 	"cube",
+	"2dshadow",
+	"2darray",
 	"other",
 };
 static const char* kGlslPrecNames[kGlslPrecCount] = {
@@ -577,8 +583,12 @@ static bool TestFile (glslopt_ctx* ctx, bool vertex,
 		std::string outputOpt;
 		ReadStringFromFile (outputPath.c_str(), outputOpt);
 
+#		ifdef __APPLE__
+
 		if (res && doCheckMetal && !CheckMetal (vertex, gles, testName, "metal", textOpt.c_str()))
 			res = false;
+
+#		endif
 		
 		if (textOpt != outputOpt)
 		{
